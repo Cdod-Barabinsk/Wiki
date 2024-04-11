@@ -1,0 +1,32 @@
+import telebot
+import wikipedia
+
+wikipedia.set_lang("ru")
+bot = telebot.TeleBot("TOKEN")
+
+
+@bot.message_handler(commands=["start"])
+def start_message(message):
+    bot.send_message(message.chat.id,
+                     "Привет! Я бот Википедии. Чтобы получить информацию "
+                     "из Википедии, просто отправь мне запрос.")
+
+
+@bot.message_handler(func=lambda message: True)
+def wiki_search(message):
+    try:
+        query = message.text  # запрос
+        
+        summary = wikipedia.summary(query)
+        bot.send_message(message.chat.id, summary)
+
+    except wikipedia.exceptions.DisambiguationError as e:
+        # варианты
+        options = ", ".join(e.options[:5])
+        bot.send_message(message.chat.id, f"Уточните ваш запрос, возможно вы имели в виду: {options}")
+    except wikipedia.exceptions.PageError:
+        # страница не найдена
+        bot.send_message(message.chat.id, "По вашему запросу ничего не найдено.")
+
+
+bot.polling()
